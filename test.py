@@ -12,7 +12,11 @@ auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
 auth.set_access_token(ACESS_KEY, ACESS_SECRET)
 
 api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
-# user = api.get_user('lipstick_whit')
+try:
+    api.verify_credentials()
+    print("Authentication OK")
+except:
+    print("Error during authentication")
 user = api.me()
 print(f'{user.screen_name} has {user.followers_count} followers.')
 
