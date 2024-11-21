@@ -4,6 +4,8 @@ from TwitterClient import TwitterClient
 from GoogleSheet import GoogleSheetsClient
 from RateLimiter import RateLimiter
 from Util import Util
+from Brevo import Brevo
+from datetime import datetime, timedelta
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -12,6 +14,7 @@ def main():
     twitter_client = TwitterClient(config)
     sheets_client = GoogleSheetsClient("service_account_credentials.json", "TechJobs")
     rate_limiter = RateLimiter(60)
+    email_client = Brevo()
 
     search_terms = ["#techjobs", "#breakintotech", "#BackendEngineer", "#startupjob", "#RemoteWork"]
     query = f"{search_terms[0]} lang:en -is:retweet"
@@ -38,10 +41,45 @@ def main():
         if rows:
             sheets_client.save_rows(rows, rate_limiter)
             logger.info(f"Successfully saved {len(rows)} rows to the Google Sheet.")
+            email_body = f"""
+            Hello,
+
+            We have successfully updated the Google Sheet with new tech job listings. 
+
+            Details:
+            - Number of new job listings: {len(rows)}
+            - Search terms used: {', '.join(search_terms)}
+            - Time of update: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+            The new job listings have been mapped from recent tweets and saved to the sheet.
+
+            Thank you for using our service!
+
+            Best regards,
+            Your Tech Job Bot
+            """
+            email_client.send_email("Google Sheet Updated", email_body)
+            email_client.send_sms(f"{len(rows)} new tech jobs added to the Google Sheet.")
         else:
             logger.info("No valid rows to save.")
     except Exception as e:
         logger.error(f"Error during execution: {e}", exc_info=True)
+        error_body = f"""
+        Hello,
+
+        An error occurred during the execution of fetching Twitter data for tech jobs. 
+
+        Error Details:
+        - Error message: {str(e)}
+        - Time of error: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+        Please review the logs for further troubleshooting.
+
+        Best regards,
+        Your Tech Job Bot
+        """
+        email_client.send_email("Error during execution of fetching twitter info", error_body)
+        email_client.send_sms("Error during execution of fetching Twitter data for tech jobs. Please review the logs for further troubleshooting.")
 
 if __name__ == "__main__":
     try:
