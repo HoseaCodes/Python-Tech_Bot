@@ -1,99 +1,52 @@
-import tweepy
-import time
+import logging
 import config
+from TwitterClient import TwitterClient
+from GoogleSheet import GoogleSheetsClient
+from RateLimiter import RateLimiter
+from Util import Util
 
-#Authenticate to Twitter
-CONSUMER_KEY = config.CONSUMER_KEY # API Key
-CONSUMER_SECRET = config.CONSUMER_SECRET # API Secret
-ACCESS_KEY = config.ACCESS_KEY # API Token
-ACCESS_SECRET = config.ACCESS_SECRET 
-auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
-auth.set_access_token(ACCESS_KEY, ACCESS_SECRET)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
 
-api = tweepy.API(auth, wait_on_rate_limit=True)
-user = api.verify_credentials()
-print(user)
-search = ['#techintership', '#devintern', '#techcareers', '#techjobs', '#referme', '#breakintotech', '#techstartups', '#facebookcareers']
-numTweet = 500
+def main():
+    twitter_client = TwitterClient(config)
+    sheets_client = GoogleSheetsClient("service_account_credentials.json", "TechJobs")
+    rate_limiter = RateLimiter(60)
 
-for item in search:
-    for tweet in tweepy.Cursor(api.search_tweets, q=item).items(numTweet):
-        try:
-            print('-------Tweet Liked---------')
-            tweet.favorite()
-            print('-------Retweet Done---------')
-            tweet.retweet()
-            time.sleep(50)
-        except tweepy.TweepError as e:
-            print(e.reason)
-        except StopIteration:
-            break
+    search_terms = ["#techjobs", "#breakintotech", "#BackendEngineer", "#startupjob", "#RemoteWork"]
+    query = f"{search_terms[0]} lang:en -is:retweet"
+    max_results = 10
 
-#Pagination
-for tweet in tweepy.Cursor(api.home_timeline).items(100):
-    print(f"{tweet.user.name} said: {tweet.text}")
+    start_time = Util.get_start_time(days_ago=1)
 
-#Create Tweet
-api.update_status("Test tweet from Tweepy")
+    try:
+        # Fetch tweets
+        tweets = twitter_client.search_tweets(
+            query=query,
+            max_results=max_results,
+            start_time=start_time,
+            expansions="geo.place_id",
+            place_fields="country_code",
+            tweet_fields=["created_at", "text"]
+        )
 
-#Get User Info
-user = api.get_user('lipstick_whit')
-print("User details:")
-print(user.name)
-print(user.description)
-print(user.location)
+        if not tweets or not tweets.data:
+            logger.info("No tweets found.")
+            return
 
-#See User's followers
-print("Last 20 Followers:")
-for follower in user.followers():
-    print(follower.name)
+        rows = [Util.map_tweet_to_row(tweet) for tweet in tweets.data if Util.map_tweet_to_row(tweet)]
+        if rows:
+            sheets_client.save_rows(rows, rate_limiter)
+            logger.info(f"Successfully saved {len(rows)} rows to the Google Sheet.")
+        else:
+            logger.info("No valid rows to save.")
+    except Exception as e:
+        logger.error(f"Error during execution: {e}", exc_info=True)
 
-#Follow User
-api.create_friendship(user)
-
-#Update Profile Description
-api.update_profile(description="I like Python")
-
-#Block a user
-for block in api.blocks():
-    print(block.name)
-
-#Search 
-for tweet in api.search(q="Python", lang="en", rpp=10):
-    print(f"{tweet.user.name}:{tweet.text}")
-
-#Find Trends
-trends_result = api.trends_place(1)
-for trend in trends_result[0]["trends"]:
-    print(trend["name"])
-
-#See if you were mentioned
-tweets = api.mentions_timeline()
-for tweet in tweets:
-    tweet.favorite()
-    tweet.user.follow()
-
-
-#How to view a stream 
-class MyStreamListener(tweepy.StreamListener):
-    def __init__(self, api):
-        self.api = api
-        self.me = api.me()
-
-    def on_status(self, tweet):
-        print(f"{tweet.user.name}:{tweet.text}")
-
-    def on_error(self, status):
-        print("Error detected")
-
-# Authenticate to Twitter
-auth = tweepy.OAuthHandler("CONSUMER_KEY", "CONSUMER_SECRET")
-auth.set_access_token("ACCESS_TOKEN", "ACCESS_TOKEN_SECRET")
-
-# Create API object
-api = tweepy.API(auth, wait_on_rate_limit=True,
-    wait_on_rate_limit_notify=True)
-
-tweets_listener = MyStreamListener(api)
-stream = tweepy.Stream(api.auth, tweets_listener)
-stream.filter(track=["Python", "Django", "Tweepy"], languages=["en"])
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        logger.info("Script interrupted by user.")
+    except Exception as e:
+        logger.critical(f"Unexpected fatal error: {e}", exc_info=True)
