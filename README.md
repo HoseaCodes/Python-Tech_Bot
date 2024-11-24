@@ -1,3 +1,4 @@
+
 ### AWS Lambda Deployment with Terraform
 
 This guide outlines the setup for deploying an AWS Lambda function and a Lambda Layer using Terraform.
@@ -73,7 +74,7 @@ After deployment, Terraform provides the following outputs:
 ### Summary
 
 This setup includes:
-- A Lambda function (`TechJobBot`) with an associated IAM execution role.
+- A Lambda function (`PartTimePulse`) with an associated IAM execution role.
 - A Lambda Layer to manage Python dependencies.
 - Outputs that include ARNs for both the Lambda function and Lambda Layer.
 
@@ -148,4 +149,29 @@ For additional help, refer to the links provided:
 
 ---
 
-This document serves as a comprehensive guide for deploying and managing an AWS Lambda function and Lambda Layer using Terraform, with detailed instructions for setting up and running a local Python development environment.
+### Terraform Setup Script
+
+You can use the provided `terraform_setup.sh` script to easily bring up and tear down your Terraform infrastructure.
+
+#### **Usage:**
+
+1. To bring up the infrastructure (create resources):
+   ```bash
+   ./terraform_setup.sh up
+   ```
+
+2. To tear down the infrastructure (destroy resources):
+   ```bash
+   ./terraform_setup.sh down
+   ```
+
+#### **Script Overview:**
+
+- **`up`**: Initializes Terraform, plans the changes, and applies the configuration to create the infrastructure.
+- **`down`**: Destroys the resources created by Terraform.
+
+The script will automatically handle the initialization, planning, and applying steps. It also provides an easy way to tear down your resources with a simple command.
+
+---
+
+This document serves as a comprehensive guide for deploying and managing an AWS Lambda function and Lambda Layer using Terraform, with detailed instructions for setting up and running a local Python development environment, as well as an easy way to manage Terraform infrastructure using the provided script.
