@@ -106,3 +106,11 @@ if __name__ == "__main__":
         logger.info("Script interrupted by user.")
     except Exception as e:
         logger.critical(f"Unexpected fatal error: {e}", exc_info=True)
+
+def lambda_handler(event, context):
+    """AWS Lambda entry point."""
+    main()
+    return {
+        "statusCode": 200,
+        "body": "Job scraping completed successfully!"
+    }
