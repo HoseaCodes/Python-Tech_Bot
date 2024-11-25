@@ -14,6 +14,7 @@ fi
 # Initialize Terraform
 initialize_terraform() {
     echo "Initializing Terraform..."
+    cd lambda
     terraform init
 }
 
@@ -32,6 +33,7 @@ apply_terraform() {
 # Destroy Terraform resources
 destroy_terraform() {
     echo "Destroying Terraform resources..."
+    cd lambda
     terraform destroy -auto-approve
 }
 
