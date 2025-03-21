@@ -1,3 +1,7 @@
+# PartTimePulse
+
+<img src="./PartTimePulseTopology.drawio.png" alt="Topology" />
+
 
 ### AWS Lambda Deployment with Terraform
 
@@ -16,6 +20,18 @@ lambda/
 ├── lambda_layer.zip         # Packaged Lambda layer
 ├── layer_requirements.txt   # Python dependencies for the layer
 ├── .gitignore               # Files and directories to ignore in Git
+├── README.md                # Documentation
+
+tech-job-analysis/
+├── job_analysis.py          # Python script for analyzing job data
+├── output/                  # Directory for analysis outputs
+│   ├── job_categories.png   # Visualization of job categories
+│   ├── top_companies.png    # Visualization of top hiring companies
+│   ├── top_locations.png    # Visualization of job locations
+│   ├── remote_vs_onsite.png # Distribution of remote vs. onsite jobs
+│   ├── top_hashtags.png     # Analysis of popular job posting hashtags
+│   ├── cleaned_job_data.csv # Processed job data for further analysis
+│   └── job_analysis_report.md # Detailed analysis report
 ├── README.md                # Documentation
 ```
 
@@ -71,18 +87,53 @@ After deployment, Terraform provides the following outputs:
 
 ---
 
+### Job Analysis Feature
+
+The `tech-job-analysis` module provides data analysis capabilities for tech job postings:
+
+1. **Data Sources:**
+   - Google Sheets data (with service account authentication)
+   - Local CSV files (downloaded from Google Sheets)
+
+2. **Analysis Features:**
+   - Job category classification
+   - Top hiring companies identification
+   - Geographic distribution analysis
+   - Remote vs. on-site job distribution
+   - Hashtag popularity analysis
+
+3. **Running the Analysis:**
+   ```bash
+   cd tech-job-analysis
+   python job_analysis.py
+   ```
+   
+4. **Usage Options:**
+   - Option 1: Analyze a local CSV file (recommended for simplicity)
+   - Option 2: Connect directly to Google Sheets API (requires service account setup)
+
+5. **Output Files:**
+   The script generates visualizations and reports saved to the `output/` directory:
+   - PNG visualizations of key metrics
+   - Detailed markdown report with insights and trends
+   - Cleaned CSV data for further analysis
+
+---
+
 ### Summary
 
 This setup includes:
 - A Lambda function (`PartTimePulse`) with an associated IAM execution role.
 - A Lambda Layer to manage Python dependencies.
 - Outputs that include ARNs for both the Lambda function and Lambda Layer.
+- A job analysis module for processing and visualizing tech job data.
 
 ---
 
 ### Release History
 
 - **Version 0.0.1:** Initial work in progress.
+- **Version 0.0.2:** Added job analysis functionality.
 
 ---
 
@@ -94,13 +145,19 @@ For contribution guidelines, review the [CONTRIBUTION.md](CONTRIBUTION.md) file.
 
 ### Python Packages Used
 
-The following Python packages are included in the Lambda Layer:
-
+#### **Lambda Layer Packages:**
 - [Tweepy](https://docs.tweepy.org/en/stable/)
 - [Gspread](https://docs.gspread.org/en/latest/)
 - [OAuth2Client](https://oauth2client.readthedocs.io/)
 - [Requests](https://docs.python-requests.org/en/master/)
 - [SIB API v3 SDK](https://developers.sendinblue.com/reference/sib-api-v3-sdk-python)
+
+#### **Job Analysis Packages:**
+- [Pandas](https://pandas.pydata.org/)
+- [Matplotlib](https://matplotlib.org/)
+- [Seaborn](https://seaborn.pydata.org/)
+- [NumPy](https://numpy.org/)
+- [Google API Python Client](https://github.com/googleapis/google-api-python-client) (for Google Sheets integration)
 
 ---
 
@@ -138,6 +195,28 @@ Follow these steps to set up a local development environment:
    deactivate
    ```
 
+#### **Job Analysis Environment Setup:**
+
+1. **Move to the job analysis directory:**
+   ```bash
+   cd tech-job-analysis
+   ```
+
+2. **Create a Virtual Environment:**
+   ```bash
+   python3 -m venv venv
+   ```
+
+3. **Activate the Virtual Environment:**
+   ```bash
+   source venv/bin/activate
+   ```
+
+4. **Install Required Packages:**
+   ```bash
+   pip install pandas matplotlib seaborn numpy google-api-python-client google-auth-httplib2 google-auth-oauthlib
+   ```
+
 ---
 
 ### Running Locally
@@ -146,6 +225,26 @@ To run the project locally, ensure you have installed all the dependencies liste
 
 For additional help, refer to the links provided:
 - [Virtual Env - venv](https://docs.python.org/3/library/venv.html)
+
+#### **Running Job Analysis Locally:**
+
+1. **Download Spreadsheet Data:**
+   - Open your Google Sheet
+   - Go to File → Download → Comma Separated Values (.csv)
+   - Save the file to the tech-job-analysis directory
+
+2. **Run the Analysis Script:**
+   ```bash
+   python job_analysis.py
+   ```
+
+3. **Select Analysis Method:**
+   - Choose option 1 to analyze the downloaded CSV file
+   - Provide the path to your CSV file when prompted
+
+4. **Review Results:**
+   - Check the `output/` directory for visualizations and reports
+   - Open `output/job_analysis_report.md` for detailed insights
 
 ---
 
@@ -172,6 +271,4 @@ You can use the provided `terraform_setup.sh` script to easily bring up and tear
 
 The script will automatically handle the initialization, planning, and applying steps. It also provides an easy way to tear down your resources with a simple command.
 
----
 
-This document serves as a comprehensive guide for deploying and managing an AWS Lambda function and Lambda Layer using Terraform, with detailed instructions for setting up and running a local Python development environment, as well as an easy way to manage Terraform infrastructure using the provided script.

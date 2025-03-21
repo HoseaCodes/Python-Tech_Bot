@@ -22,3 +22,7 @@ service_account_credentials.json
 *.zip
 
 .terraform.lock.hcl
+
+tech-job-analysis/credentials.json
+tech-job-analysis/output
+tech-job-analysis/service_account_credentials.json
